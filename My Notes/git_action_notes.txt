@@ -1,0 +1,308 @@
+#git action : follow the event driven architechture . 
+------------------
+=> git pull/push/merge etc event 
+
+on : [push,pull,merg]  <- event , jobs run according to the event . 
+
+jobs:  <- is the combination of step of command 
+    jobs_name_set : 
+        runs-on: ubundu-latest <- give the name of the os 
+        setps:
+            name: First Step <- set the name of the step. 
+            run : echo "hello world" <- single bash command  
+            
+            run: | <- this '|' symbol use for run multiple command
+                echo "hello world" > hello.txt
+                cat hello.txt 
+                
+
+
+
+=============================================== menual work flow ===============================================
+name : Menual workflow <- name of the work flow . 
+on : 
+    workflow_dispatch  <- this workflow not run autometically. to run this have to click on the action button of the git repo. 
+
+jobs:  <- is the combination of step of command 
+    menual_workflow : 
+        runs-on: [windwos,mac-os] <- for multiple argument use the this 3rd braket => []
+        setps: 
+            run : echo "hello world" <- single bash command  
+            
+            run: | <- this '|' symbol use for run multiple command
+                echo "hello world" > hello.txt
+                cat hello.txt 
+                
+                
+=============================================== schedul work flow ===============================================
+name : Schedule workflow <- name of the work flow . 
+
+on : 
+    schedule:   <- this workflow run according to the schedule. 
+        - cron : '*/5 * * * * ' <- run on every five minutes. 
+
+jobs:  <- is the combination of step of command 
+    cron_workflow : 
+        runs-on: [windwos,mac-os] <- for multiple argument use the this 3rd braket => []
+        setps: 
+            run : echo "hello world" <- single bash command  
+            
+            run: | <- this '|' symbol use for run multiple command
+                echo "hello world" > hello.txt
+                cat hello.txt 
+                
+=============================================== Depended Multiple jobs run on the same work flow and 1 jobs depend with another jobs -> need:[jobs_name] ===============================================
+name : Multiple jobs workflow <- name of the work flow . 
+
+on : push
+    branch: 
+        - main
+
+jobs:  
+    first work flow jobs : 
+        runs-on: ubundu-latest
+        name : 
+        setps:
+            name: First Step 
+            run : echo "hello world" 
+            
+            run: | 
+                echo "hello world" > hello.txt
+                cat hello.txt 
+                
+
+jobs: 
+    second work flow jobs : 
+        runs-on: ubundu-latest 
+        needs : [first work flow jobs ]
+        setps:
+            name: First Step 
+            run : echo "hello world" 
+            
+            run: | 
+                echo "hello world" > hello.txt
+                cat hello.txt 
+                
+============================== conditional work flow : ===================================================================
+if docker backend image is update but frontend image not update then we run the conditional work flow : 
+
+name : conditional workflow 
+
+on : 
+    push: 
+        path: 
+         - backend/*** <- if backend folder any change then run this workflow . 
+            
+
+jobs: 
+    conditional-workflow-jobs: 
+    runs-on : ubuntu-latest
+    steps: 
+        -name : Build Backend Image
+         run : cho "Backend Image is building " 
+
+
+============================== value pass work flow : ===================================================================
+create 2 jobs , one jobs pass value to another jobs . 
+
+name: value pass workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Enter Your name'
+        required: true
+        default: 'unnamed'
+
+jobs:
+  get-value-pass-workflow-jobs:
+    runs-on: ubuntu-latest
+    outputs:
+      greeting-message: ${{ steps.generate-message.outputs.message }} <- {{steps.id.outputs.echo_varible}}
+      
+    steps:
+      - name: Generate greeting message
+        id: generate-message
+        run: |
+          echo "Hello, ${{ github.event.inputs.name }}!"
+          echo "message=Hello, ${{ github.event.inputs.name }}!" >> $GITHUB_OUTPUT <- $GITHUB_OUTPUT == 'output'
+
+  print-value-pass-workflow-jobs:
+    runs-on: ubuntu-latest
+    needs: [get-value-pass-workflow-jobs]
+    steps:
+      - name: Print the greeting message
+        run: |
+          echo "${{ needs.get-value-pass-workflow-jobs.outputs.greeting-message }}" <- {{needs.jobs_name.output.id}}
+          
+          
+          
+============================== predefine work flow : ===================================================================
+
+how to use the self hosted github runner and use git action predefine workflow. 
+
+name: predefine workflow 
+
+on : 
+    workflow_dispatch: 
+    
+jobs: 
+    predefined-workflow:
+        runs-on: ubuntu-latest
+        
+        setps: 
+         - name: NodeJs Version
+           run : node -v
+          
+         - name : Setup Predefine workflow 
+           usees: actions/setup-node@v3 <- use the git pre-buld node packages. | check the repo already code in repo for node =>  https://github.com/actions/setup-node@version_on_the_git_repo.
+           with : 
+                node-version: '20'
+        
+         - name : NodeJs Version Check
+           run  : node -v
+
+
+============================== matrix work flow ( parallel workflow): Home Work ===================================================================
+
+matrix workflow is the way to run multiple workflow in parallel way . usecase : build multiple docker image or deploy multiple server. 
+
+
+
+name: matrix workflow 
+
+on : 
+    workflow_dispatch: 
+    
+jobs: 
+    matrix-workflow:
+        runs-on: ubuntu-latest
+        
+        strategoy:
+           matrix:
+           uppercase: [A,B,C]
+           lowercase: [a,b,c]
+           
+           
+        
+        setps: 
+         - name: Echo Message
+           run : |
+            echo " Runnig Matrix Work-flow"
+        
+         - name : Print Matrix Array
+           run  : | 
+             echo ${{matrix.uppercas}}
+             
+         - name: Print Matrix All 
+           run : | 
+            echo "Matrix is : ${{matrix.uppercase}} ${{matrix.lowercase}}
+            
+
+============================== Run any language Script work flow ( parallel workflow): ===================================================================
+
+user any language script in the work flow . 
+
+
+name: script workflow 
+
+on : 
+    workflow_dispatch: 
+    
+jobs: 
+    script-workflow:
+        runs-on: ubuntu-latest
+        
+        setps: 
+             - name: Checkout Code <- from the git/repo check all the file for run any script or other operation . 
+               usages: action/checkout@v4 
+               
+               
+             - name: Script WorkFlow 
+               run : |
+                echo " Runnig Script Work-flow"
+            
+             - name : Run Python Script
+               run  : python script.py  <- this script.py in my repo now run in here . 
+ 
+ 
+============================== Run any language Script work flow ( parallel workflow): ===================================================================
+ 
+ in git hub-> repo -> setting -> left menu -> Secrets and Variable | those use for docker , aws etc credential . or use those value as varible into the 
+ workflow . 
+ *** Best Practise set those Varibale value in Uppercase. 
+ 
+ 
+ Actions Secrets / Update secret
+ 
+ variable_name => DOCKER_PASSWORD
+ value => _set_docker_password_123
+ 
+
+
+
+name: script workflow 
+
+on : 
+    workflow_dispatch: 
+    
+jobs: 
+    secrets-workflow:
+        runs-on: ubuntu-latest
+        
+        setps: 
+             - name: Login Docker Hub
+               run : docker login --${{screts.DOCKER_PASSWORD}} <- this DOCKER_PASSWORD Set in the github secrets
+               
+             - name : Use Varibale 
+               run  : echo --${{sectrets.Varibale_Name}} <- this Varibale_name Set in the github varible
+               
+               
+               
+================================================= Reusable workflow : ===================================================================
+we can use the reusable workflow in other workflow  : 
+
+name : Resusable workflow 
+
+on : 
+    workflow_class <- call the other workflow . 
+            
+
+jobs: 
+    reusable-workflow-jobs: 
+    runs-on : ubuntu-latest
+    steps: 
+        -name : Check the Code
+         run : actions/checkout@v4
+         
+        -name : Image Building
+         run  : | 
+            echo "Docker Image Building!"
+        
+        -name : Image Pushing
+         run  : | 
+            echo "Docker Image Pushing!"
+
+
+
+**** call the reusable workflow in the another workflow :
+---------------------------------------------------------
+
+
+name : Use Resusable workflow 
+
+on : 
+    push: 
+        path: 
+            - "backend/**"
+            
+
+jobs:  
+        call_reusable_workflow <- not need 'runs-on' any os  cause os use from re-usebale workflow. 
+        steps: 
+            -name: Building Backend Image
+             uses: git_user_name/reponame/.github/workflow/re-usable-workflow-file-name.yml@branch_name <- use reusable workflow here . 
+             
+             
+==================================== Composit workflow ====================================================
