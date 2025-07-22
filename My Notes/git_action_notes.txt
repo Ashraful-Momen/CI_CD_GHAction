@@ -305,4 +305,145 @@ jobs:
              uses: git_user_name/reponame/.github/workflow/re-usable-workflow-file-name.yml@branch_name <- use reusable workflow here . 
              
              
-==================================== Composit workflow ====================================================
+==================================== Composite workflow ====================================================
+my workflow can Use by other user with my git repo . 
+
+=> save file name as any_name_composite_action.yml
+
+=> structure of composite work : 
+     name: set the name as   U want!
+     description : set the descriptions. 
+    
+     input  <- input is the optional 
+         description
+         required: true/false
+         default : 'set the default value '
+     outputs <- this is the optional .
+        message:
+            description: The Greeting message
+            value      : ${{steps.greeting.outputs.message}}   <- steps.id_name.run_output.run_output_var_name.
+     run 
+         using: coposite
+         steps: 
+            - name: Grenerate Greeting
+              shell: bash
+              id   : greeting
+              run : | 
+                echo "message' Hello, ${{input.name}}" >> $GITHUB_OPTPUT
+    
+     action: <- no need 
+     
+     
+#then in the composite_workflow_file_repo => right side menu => Releases => set => tag and => description => publish release. 
+    
+ 
+#call the composite from other workflow : 
+
+name :Composite Action (call the composite workflow for action) . 
+
+on   : 
+    workflow_dispatch: 
+        inputs: 
+          name:
+                description: 'Enter Your Name" 
+                reuired: true
+                default: 'unnamed'
+
+jobs: 
+    composite-action: 
+      runs-on: ubuntu-latest
+      
+    setps: 
+        - name: Checkout Code
+        uses  : actions/checkout@4
+        
+        - name: Run Composite Action
+        id    : greet
+        uses  : ./   <- composite file location in the local folder. 
+        with  : 
+            name: ${{github.event.inputs.name}}
+            
+            
+        - name: Print Massage
+        run   : | 
+            echo "The greeting msg is : ${{steps.greet.outputs.message}}
+            
+    
+    
+                
+
+=========================== another example for composite workflow ============================================
+
+Name: Descriptive name of the action.
+Description: Purpose of the action.
+Inputs: Parameters to customize the action (e.g., PHP or Node.js version).
+Outputs: Values returned to the calling workflow (e.g., test results).
+Runs: Specifies it’s a composite action and defines steps.
+Action: Individual steps (e.g., run commands, use other actions).
+    
+**** explain code with example => 
+
+
+name: 'Laravel React Setup'
+description: 'Sets up PHP and Node.js environment, installs dependencies, and runs tests for Laravel/React projects'
+inputs:
+  php-version:
+    description: 'PHP version to use'
+    required: true
+    default: '8.2'
+  node-version:
+    description: 'Node.js version to use'
+    required: true
+    default: '18'
+outputs:
+  test-status:
+    description: 'Status of the test run'
+    value: ${{ steps.run-tests.outputs.test-status }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php-version }}
+
+    - name: Install PHP Dependencies
+      run: composer install --prefer-dist --no-progress
+      shell: bash
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install Node.js Dependencies
+      run: npm install
+      shell: bash
+
+    - name: Run Laravel Tests
+      id: run-tests
+      run: |
+        php artisan test
+        echo "test-status=success" >> $GITHUB_OUTPUT
+      shell: bash
+      
+Explanation of the Composite Action
+
+    Name & Description: Clearly defines the action’s purpose for Laravel/React projects.
+    Inputs:
+        php-version: Allows customization of PHP version (default: 8.2, common for Laravel).
+        node-version: Sets Node.js version (default: 18, suitable for React).
+    Outputs:
+        test-status: Captures the test run status for use in the calling workflow.
+    Runs:
+        Specifies composite to indicate multiple steps.
+    Steps:
+        Checkout Code: Uses actions/checkout@v4 to access the repository (per your notes).
+        Setup PHP: Configures PHP using a predefined action (shivammathur/setup-php@v2).
+        Install PHP Dependencies: Runs composer install for Laravel dependencies.
+        Setup Node.js: Uses actions/setup-node@v3 for React dependencies (per your predefined workflow example).
+        Install Node.js Dependencies: Runs npm install for front-end dependencies.
+        Run Tests: Executes Laravel tests with php artisan test and outputs the status to $GITHUB_OUTPUT (per your value-passing example).
