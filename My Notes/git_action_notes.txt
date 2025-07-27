@@ -5,7 +5,7 @@
 on : [push,pull,merg]  <- event , jobs run according to the event . 
 
 jobs:  <- is the combination of step of command 
-    jobs_name_set : 
+    jobs_name_set : <- name of the jobs.
         runs-on: ubundu-latest <- give the name of the os 
         setps:
             name: First Step <- set the name of the step. 
